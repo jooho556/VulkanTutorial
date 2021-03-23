@@ -604,6 +604,63 @@ void VulkanRenderer::CreateGraphicsPipiline() {
 	VkPipelineShaderStageCreateInfo shader_stages[] = { vertex_shader_create_info, fragment_shader_create_info };
 
 	//Create pipeline
+	// -- Vertex input -- 
+	VkPipelineVertexInputStateCreateInfo vertex_input_create_info;
+	vertex_input_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+	vertex_input_create_info.vertexBindingDescriptionCount = 0;
+	vertex_input_create_info.pVertexBindingDescriptions = nullptr;
+	vertex_input_create_info.vertexAttributeDescriptionCount = 0;
+	vertex_input_create_info.pVertexAttributeDescriptions = nullptr;
+
+	// -- Input Assembly -- 
+	VkPipelineInputAssemblyStateCreateInfo input_assembly;
+	input_assembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+	input_assembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;					// like GL_TRIANGLE / GL_LINE / ...
+	input_assembly.primitiveRestartEnable = VK_FALSE;								// Allow overriding of "strip" topology to start new primitives
+
+	// -- Viewport & Scissor --
+	//Create a viewport info struct
+	VkViewport viewport;
+	viewport.x = 0.f;																//X start coordinate
+	viewport.y = 0.f;																//Y start coordinate
+	viewport.width = (float)swapchain_extent.width;									//Width of viewport
+	viewport.height = (float)swapchain_extent.height;								//Height of viewport
+	viewport.minDepth = 0.f;														//Min framebuffer depth
+	viewport.maxDepth = 1.f;														//Max framebuffer depth
+
+	//Create a scissor info struct
+	VkRect2D scissor;
+	scissor.offset = { 0, 0 };														//Offset to use region from
+	scissor.extent = swapchain_extent;												//Extent to decribe region to use, starting at offset
+
+	VkPipelineViewportStateCreateInfo viewport_state_create_info;
+	viewport_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+	viewport_state_create_info.viewportCount = 1;
+	viewport_state_create_info.pViewports = &viewport;
+	viewport_state_create_info.scissorCount = 1;
+	viewport_state_create_info.pScissors = &scissor;
+
+	//// -- Dynamic State --
+	////Dynamic states to enable
+	//std::vector<VkDynamicState> dynamic_state_enables;
+	//dynamic_state_enables.push_back(VK_DYNAMIC_STATE_VIEWPORT); // dynamic viewport : can resize in command buffer with vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+	//dynamic_state_enables.push_back(VK_DYNAMIC_STATE_SCISSOR);	// dynamic scissors : can resize in command buffer with vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+
+	////Dynamic state creation info
+	//VkPipelineDynamicStateCreateInfo dynamic_state_create_info;
+	//dynamic_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+	//dynamic_state_create_info.dynamicStateCount = static_cast<uint32_t>(dynamic_state_enables.size());
+	//dynamic_state_create_info.pDynamicStates = dynamic_state_enables.data();
+
+	// -- Rasterizer -- 
+	VkPipelineRasterizationStateCreateInfo rasterization_create_info;
+	rasterization_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+	rasterization_create_info.depthClampEnable = VK_FALSE;							//Change if fragment beyond near / far plane are clipped (default) or clamped to plane -> NEED GPU FEATURE
+	rasterization_create_info.rasterizerDiscardEnable = VK_FALSE;					//Whether to discard data and skip rasterization - only suitable for pipeline without framebuffer output
+	rasterization_create_info.polygonMode = VK_POLYGON_MODE_FILL;					//Wireframe mode / ... -> NEED GPU FEATURE
+	rasterization_create_info.lineWidth = 1.f;										//Thickness of line
+	rasterization_create_info.cullMode = VK_CULL_MODE_BACK_BIT;						//Which face of a triangle to cull
+	rasterization_create_info.frontFace = VK_FRONT_FACE_CLOCKWISE;					//Winding to determine which side is front
 
 	//Destroy shader modules, no longer needed after pipeline created
 	vkDestroyShaderModule(devices.logical_device, vertex_shader_module, nullptr);
